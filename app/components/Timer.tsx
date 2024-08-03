@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface TimerProps {
   time: number;
@@ -7,6 +7,11 @@ interface TimerProps {
 
 export default function Timer({ time, onEnd }: TimerProps) {
   const [timeRemaining, setTimeRemaining] = useState(time);
+  const onEndRef = useRef(onEnd);
+
+  useEffect(() => {
+    onEndRef.current = onEnd;
+  }, [onEnd]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -15,12 +20,12 @@ export default function Timer({ time, onEnd }: TimerProps) {
           return prevTime - 1;
         }
         clearInterval(interval);
-        onEnd();
+        onEndRef.current();
         return 0;
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [onEnd]);
+  }, []);
 
   return (
     <div className="flex justify-center mx-auto items-center rounded-md bg-primary px-2.5 py-1.5 text-lg font-semibold text-primary-foreground shadow transition-colors">

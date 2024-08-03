@@ -1,7 +1,7 @@
 import { useFetcher, useNavigate } from "@remix-run/react";
 import he from "he";
 import { ChevronLeft, ChevronRight, Save } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Timer from "~/components/Timer";
 import { Button } from "~/components/ui/button";
 import type { Question } from "~/types/quiz";
@@ -11,7 +11,6 @@ export default function Quiz({ questions, timer }: { questions: Question[]; time
   const [selectedAnswer, setSelectedAnswer] = useState("");
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
-  const [timerEnded, setTimerEnded] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const fetcher = useFetcher();
   const navigate = useNavigate();
@@ -49,7 +48,6 @@ export default function Quiz({ questions, timer }: { questions: Question[]; time
   };
 
   const handleTimerEnd = () => {
-    setTimerEnded(true);
     setShowResults(true);
   };
 
@@ -79,12 +77,9 @@ export default function Quiz({ questions, timer }: { questions: Question[]; time
     return { totalCorrect, totalWrong, totalAnswered, score };
   };
 
-  useEffect(() => {
-    if (timerEnded) {
-      const { totalCorrect, totalWrong, totalAnswered, score } = calculateResults();
-      console.log("Results:", { totalCorrect, totalWrong, totalAnswered, score });
-    }
-  }, [timerEnded]);
+  if (!questions || questions.length === 0) {
+    return <div>Loading...</div>;
+  }
 
   const { totalCorrect, totalWrong, totalAnswered, score } = calculateResults();
 
@@ -94,13 +89,13 @@ export default function Quiz({ questions, timer }: { questions: Question[]; time
       {!showResults ? (
         <>
           <div className="flex justify-between items-center">
-            <div className="text-sm max-w-40 font-medium text-muted-foreground">
+            <div className="text-sm flex-1 font-medium text-muted-foreground">
               {he.decode(questions[currentQuestionIndex].category)}
             </div>
-            <div className="text-sm font-medium text-muted-foreground">
+            <div className="text-sm uppercase flex-1 font-medium text-muted-foreground">
               Difficulty: {questions[currentQuestionIndex].difficulty}
             </div>
-            <div className="text-sm font-medium text-muted-foreground">
+            <div className="text-sm flex-1 font-medium text-muted-foreground">
               {currentQuestionIndex + 1} of {questions.length} questions
             </div>
           </div>
@@ -118,7 +113,7 @@ export default function Quiz({ questions, timer }: { questions: Question[]; time
                 handleAnswerClick={handleAnswerClick}
                 selectedAnswer={selectedAnswer}
               >
-                {answer}
+                {he.decode(answer)}
               </ButtonQuiz>
             ))}
           </div>

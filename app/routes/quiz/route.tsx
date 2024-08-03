@@ -1,6 +1,6 @@
 import { getAuth } from "@clerk/remix/ssr.server";
 import type { LoaderFunctionArgs } from "@remix-run/node";
-import { redirect } from "@remix-run/node";
+import { json, redirect } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { quizCookie } from "~/cookies.server";
 import type { Question } from "~/types/quiz";
@@ -16,7 +16,7 @@ export async function loader({ request, params, context }: LoaderFunctionArgs) {
   const cookieData = (await quizCookie.parse(cookieHeader)) || {};
 
   if (cookieData.questions) {
-    return cookieData;
+    return json(cookieData);
   }
 
   const data = await fetch("https://opentdb.com/api.php?amount=10&type=multiple");
@@ -26,9 +26,9 @@ export async function loader({ request, params, context }: LoaderFunctionArgs) {
     ...q,
   }));
 
-  const cookieValue = { questions: questionsWithId, timer: 5 };
+  const cookieValue = { questions: questionsWithId, timer: 30 };
 
-  return new Response(JSON.stringify(cookieValue), {
+  return json(cookieValue, {
     headers: {
       "Set-Cookie": await quizCookie.serialize(cookieValue),
     },
@@ -38,7 +38,7 @@ export async function loader({ request, params, context }: LoaderFunctionArgs) {
 export default function QuizPage() {
   const { questions, timer } = useLoaderData<{ questions: Question[]; timer: number }>();
 
-  if (!questions) {
+  if (!questions || questions.length === 0) {
     return (
       <main className="flex min-h-[100dvh] flex-col">
         <div className="m-5 flex items-center justify-center">
