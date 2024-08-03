@@ -1,5 +1,7 @@
+import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/remix";
 import { Link } from "@remix-run/react";
 import { PuzzleIcon } from "lucide-react";
+import { Button } from "./ui/button";
 
 export default function HomeHeader() {
   return (
@@ -9,18 +11,22 @@ export default function HomeHeader() {
         <span className="sr-only">My Quiz App</span>
       </Link>
       <nav className="ml-auto flex gap-4 items-center sm:gap-6">
-        <Link to="#" className="text-sm font-medium hover:underline underline-offset-4">
-          Features
+        <Link to="#home" className="text-sm font-medium hover:underline underline-offset-4">
+          Home
         </Link>
-        <Link to="#" className="text-sm font-medium hover:underline underline-offset-4">
-          About
+        <Link to="#feature" className="text-sm font-medium hover:underline underline-offset-4">
+          Feature
         </Link>
-        <Link
-          to="#"
-          className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
-        >
-          Login
-        </Link>
+        <SignedIn>
+          <Button asChild>
+            <UserButton />
+          </Button>
+        </SignedIn>
+        <SignedOut>
+          <Button asChild>
+            <SignInButton />
+          </Button>
+        </SignedOut>
       </nav>
     </header>
   );
