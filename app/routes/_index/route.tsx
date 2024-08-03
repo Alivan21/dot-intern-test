@@ -1,15 +1,7 @@
-import type { MetaFunction } from "@remix-run/node";
 import { Link } from "@remix-run/react";
 import { BadgeIcon, PowerIcon, TypeIcon } from "lucide-react";
 import Footer from "~/components/Footer";
 import HomeHeader from "~/components/HomeHeader";
-
-export const meta: MetaFunction = () => {
-  return [
-    { title: "My Quiz App" },
-    { name: "description", content: "Test Your Knowledge with My Quiz App" },
-  ];
-};
 
 export default function Index() {
   return (

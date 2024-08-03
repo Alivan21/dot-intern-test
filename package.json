@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@clerk/remix": "^4.2.9",
+    "@radix-ui/react-alert-dialog": "^1.1.1",
     "@radix-ui/react-slot": "^1.1.0",
     "@remix-run/node": "^2.10.3",
     "@remix-run/react": "^2.10.3",
