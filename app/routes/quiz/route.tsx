@@ -1,118 +1,64 @@
 import { getAuth } from "@clerk/remix/ssr.server";
-import type { LoaderFunction } from "@remix-run/node";
+import type { LoaderFunctionArgs } from "@remix-run/node";
 import { redirect } from "@remix-run/node";
-import { ChevronLeft, ChevronRight, Save, X } from "lucide-react";
-import { useState } from "react";
-import { Button } from "~/components/ui/button";
+import { useLoaderData } from "@remix-run/react";
+import { quizCookie } from "~/cookies.server";
+import type { Question } from "~/types/quiz";
+import Quiz from "./_components/Quiz";
 
-export const loader: LoaderFunction = async (args) => {
-  const { userId } = await getAuth(args);
+export async function loader({ request, params, context }: LoaderFunctionArgs) {
+  const { userId } = await getAuth({ request, params, context });
   if (!userId) {
     return redirect("/");
   }
-  return {};
-};
 
-export default function QuizPage() {
-  const [selectedAnswer, setSelectedAnswer] = useState("");
+  const cookieHeader = request.headers.get("Cookie");
+  const cookieData = (await quizCookie.parse(cookieHeader)) || {};
 
-  const handleAnswerClick = (answer: string) => {
-    setSelectedAnswer(answer);
-  };
+  if (cookieData.questions) {
+    return cookieData;
+  }
 
-  const handleNextClick = () => {};
+  const data = await fetch("https://opentdb.com/api.php?amount=10&type=multiple");
+  const questions = await data.json();
+  const questionsWithId = questions.results.map((q: Question, index: number) => ({
+    id: index + 1,
+    ...q,
+  }));
 
-  const handlePrevClick = () => {};
+  const cookieValue = { questions: questionsWithId, timer: 5 };
 
-  return (
-    <main className="min-h-[100dvh] flex flex-col">
-      <div className="flex justify-center items-center m-5">
-        <h1 className="text-center flex-1 text-xl font-bold">My Quiz App</h1>
-        <Button className="rounded-full ms-auto" size="icon" variant="destructive">
-          <X />
-        </Button>
-      </div>
-      <div className="flex flex-col my-auto items-center justify-center bg-background px-4 py-12 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-6">
-          <div className="flex justify-between items-center">
-            <div className="text-sm font-medium text-muted-foreground">Geography Quiz</div>
-            <div className="text-sm font-medium text-muted-foreground">Difficulty: Easy</div>
-            <div className="text-sm font-medium text-muted-foreground">4 of 10 questions</div>
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">
-            What is the capital of France?
-          </h1>
-          <div className="grid grid-cols-1 gap-2">
-            <ButtonQuiz
-              answer="Berlin"
-              handleAnswerClick={handleAnswerClick}
-              selectedAnswer={selectedAnswer}
-            >
-              Berlin
-            </ButtonQuiz>
-            <ButtonQuiz
-              answer="Madrid"
-              handleAnswerClick={handleAnswerClick}
-              selectedAnswer={selectedAnswer}
-            >
-              Madrid
-            </ButtonQuiz>
-            <ButtonQuiz
-              answer="Paris"
-              handleAnswerClick={handleAnswerClick}
-              selectedAnswer={selectedAnswer}
-            >
-              Paris
-            </ButtonQuiz>
-            <ButtonQuiz
-              answer="Rome"
-              handleAnswerClick={handleAnswerClick}
-              selectedAnswer={selectedAnswer}
-            >
-              Rome
-            </ButtonQuiz>
-          </div>
-          <div className="flex flex-row gap-2">
-            <Button
-              onClick={handleNextClick}
-              className="w-full rounded-md bg-primary px-4 py-2 text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-            >
-              <ChevronLeft />
-            </Button>
-            <Button className="bg-green-500 hover:bg-green-700">
-              <Save />
-            </Button>
-            <Button
-              onClick={handlePrevClick}
-              className="w-full rounded-md bg-primary px-4 py-2 text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-            >
-              <ChevronRight />
-            </Button>
-          </div>
-        </div>
-      </div>
-    </main>
-  );
+  return new Response(JSON.stringify(cookieValue), {
+    headers: {
+      "Set-Cookie": await quizCookie.serialize(cookieValue),
+    },
+  });
 }
 
-function ButtonQuiz({
-  handleAnswerClick,
-  selectedAnswer,
-  answer,
-  children,
-}: {
-  handleAnswerClick: (answer: string) => void;
-  selectedAnswer: string;
-  answer: string;
-  children: React.ReactNode;
-}) {
+export default function QuizPage() {
+  const { questions, timer } = useLoaderData<{ questions: Question[]; timer: number }>();
+
+  if (!questions) {
+    return (
+      <main className="flex min-h-[100dvh] flex-col">
+        <div className="m-5 flex items-center justify-center">
+          <h1 className="flex-1 text-center font-bold text-xl">My Quiz App</h1>
+        </div>
+        <div className="my-auto flex flex-col items-center justify-center bg-background px-4 py-12 sm:px-6 lg:px-8">
+          <div>Loading...</div>
+        </div>
+      </main>
+    );
+  }
+
   return (
-    <Button
-      onClick={() => handleAnswerClick(answer)}
-      className="justify-start w-full rounded-md px-4 py-2 text-left transition-colors"
-      variant={selectedAnswer === answer ? "default" : "outline"}
-    >
-      {children}
-    </Button>
+    <main className="flex min-h-[100dvh] flex-col">
+      <div className="m-5 flex items-center justify-center">
+        <h1 className="flex-1 text-center font-bold text-xl">My Quiz App</h1>
+      </div>
+      <div className="my-auto flex flex-col items-center justify-center bg-background px-4 py-12 sm:px-6 lg:px-8">
+        <Quiz questions={questions} timer={timer} />
+      </div>
+    </main>
   );
 }
