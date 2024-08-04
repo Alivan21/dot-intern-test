@@ -8,7 +8,6 @@ import type { Question } from "~/types/quiz";
 import ResultsDialog from "./ResultsDialog";
 
 export default function Quiz({ questions, timer }: { questions: Question[]; timer: number }) {
-  const [selectedAnswer, setSelectedAnswer] = useState("");
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [showResults, setShowResults] = useState(false);
@@ -16,16 +15,14 @@ export default function Quiz({ questions, timer }: { questions: Question[]; time
   const navigate = useNavigate();
 
   const handleAnswerClick = (answer: string) => {
-    setSelectedAnswer(answer);
+    setAnswers((prevAnswers) => ({
+      ...prevAnswers,
+      [currentQuestionIndex]: answer,
+    }));
   };
 
   const handleNextClick = () => {
     if (currentQuestionIndex < questions.length - 1) {
-      setAnswers((prevAnswers) => ({
-        ...prevAnswers,
-        [currentQuestionIndex]: selectedAnswer,
-      }));
-      setSelectedAnswer("");
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     }
   };
@@ -37,10 +34,6 @@ export default function Quiz({ questions, timer }: { questions: Question[]; time
   };
 
   const handleSaveClick = () => {
-    setAnswers((prevAnswers) => ({
-      ...prevAnswers,
-      [currentQuestionIndex]: selectedAnswer,
-    }));
     fetcher.submit(
       { answers: JSON.stringify(answers) },
       { method: "post", action: "/save-answers" },
@@ -77,6 +70,8 @@ export default function Quiz({ questions, timer }: { questions: Question[]; time
     return { totalCorrect, totalWrong, totalAnswered, score };
   };
 
+  const currentSelectedAnswer = answers[currentQuestionIndex] || "";
+
   if (!questions || questions.length === 0) {
     return <div>Loading...</div>;
   }
@@ -111,9 +106,9 @@ export default function Quiz({ questions, timer }: { questions: Question[]; time
                 key={index}
                 answer={answer}
                 handleAnswerClick={handleAnswerClick}
-                selectedAnswer={selectedAnswer}
+                selectedAnswer={currentSelectedAnswer}
               >
-                {he.decode(answer)}
+                {answer}
               </ButtonQuiz>
             ))}
           </div>
@@ -163,11 +158,14 @@ function ButtonQuiz({
   answer: string;
   children: React.ReactNode;
 }) {
+  const isSelected = selectedAnswer === answer;
   return (
     <Button
       onClick={() => handleAnswerClick(answer)}
-      className="w-full justify-start rounded-md px-4 py-2 text-left transition-colors"
-      variant={selectedAnswer === answer ? "default" : "outline"}
+      className={`w-full justify-start rounded-md px-4 py-2 text-left transition-colors ${
+        isSelected ? "bg-blue-500 text-white" : "bg-gray-200"
+      }`}
+      variant={isSelected ? "default" : "outline"}
     >
       {children}
     </Button>
