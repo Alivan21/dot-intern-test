@@ -112,7 +112,7 @@ export default function Quiz({ questions, timer }: { questions: Question[]; time
             ].map((answer, index) => (
               <ButtonQuiz
                 key={index}
-                answer={answer}
+                answer={he.decode(answer)}
                 handleAnswerClick={handleAnswerClick}
                 selectedAnswer={currentSelectedAnswer}
               >
