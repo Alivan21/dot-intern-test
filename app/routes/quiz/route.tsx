@@ -26,7 +26,7 @@ export async function loader({ request, params, context }: LoaderFunctionArgs) {
     ...q,
   }));
 
-  const cookieValue = { questions: questionsWithId, timer: 60 };
+  const cookieValue = { questions: questionsWithId, timer: 100 };
 
   return json(cookieValue, {
     headers: {
