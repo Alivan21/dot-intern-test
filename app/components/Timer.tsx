@@ -3,21 +3,29 @@ import { useEffect, useRef, useState } from "react";
 interface TimerProps {
   time: number;
   onEnd: () => void;
+  onTick: (timeLeft: number) => void;
 }
 
-export default function Timer({ time, onEnd }: TimerProps) {
+export default function Timer({ time, onEnd, onTick }: TimerProps) {
   const [timeRemaining, setTimeRemaining] = useState(time);
   const onEndRef = useRef(onEnd);
+  const onTickRef = useRef(onTick);
 
   useEffect(() => {
     onEndRef.current = onEnd;
   }, [onEnd]);
 
   useEffect(() => {
+    onTickRef.current = onTick;
+  }, [onTick]);
+
+  useEffect(() => {
     const interval = setInterval(() => {
       setTimeRemaining((prevTime) => {
         if (prevTime > 0) {
-          return prevTime - 1;
+          const newTime = prevTime - 1;
+          onTickRef.current(newTime);
+          return newTime;
         }
         clearInterval(interval);
         onEndRef.current();

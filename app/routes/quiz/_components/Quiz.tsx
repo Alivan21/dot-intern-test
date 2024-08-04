@@ -10,6 +10,7 @@ import ResultsDialog from "./ResultsDialog";
 export default function Quiz({ questions, timer }: { questions: Question[]; timer: number }) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [remainingTime, setRemainingTime] = useState(timer);
   const [showResults, setShowResults] = useState(false);
   const fetcher = useFetcher();
   const navigate = useNavigate();
@@ -35,13 +36,20 @@ export default function Quiz({ questions, timer }: { questions: Question[]; time
 
   const handleSaveClick = () => {
     fetcher.submit(
-      { answers: JSON.stringify(answers) },
+      {
+        answers: JSON.stringify(answers),
+        remainingTime: remainingTime.toString(),
+      },
       { method: "post", action: "/save-answers" },
     );
   };
 
   const handleTimerEnd = () => {
     setShowResults(true);
+  };
+
+  const handleTimerTick = (timeLeft: number) => {
+    setRemainingTime(timeLeft);
   };
 
   const handleCloseResults = () => {
@@ -80,7 +88,7 @@ export default function Quiz({ questions, timer }: { questions: Question[]; time
 
   return (
     <div className="w-full max-w-md space-y-6">
-      <Timer time={timer} onEnd={handleTimerEnd} />
+      <Timer time={timer} onEnd={handleTimerEnd} onTick={handleTimerTick} />
       {!showResults ? (
         <>
           <div className="flex justify-between items-center">
